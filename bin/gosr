@@ -1,0 +1,50 @@
+#! /usr/bin/env python
+# vim: set ft=python :
+"""
+short read tool collection
+"""
+
+from __future__ import print_function
+import argparse
+import logging
+
+
+# pipeline modules
+import gosr.tools
+
+################################################################################
+# helper functions
+################################################################################
+
+################################################################################
+# Root parser
+################################################################################
+
+cmdline  = argparse.ArgumentParser(
+        description = " short read tools ".center(70, "*"))
+cmdline.add_argument("-q", "--quiet", action="store_true", default=False,
+        help = "exclude debug messages")
+commands = cmdline.add_subparsers(
+        title       = "subcommands")
+
+################################################################################
+# interface for the tools
+################################################################################
+tools = [t for t in dir(gosr.tools) if not t.startswith("__")]
+for tool in tools:
+    getattr(gosr.tools, tool).setup(commands)
+
+
+################################################################################
+# run
+################################################################################
+args = cmdline.parse_args()
+if args.quiet is True:
+    log_level = logging.INFO
+else:
+    log_level = logging.DEBUG
+logging.basicConfig(
+        level   = log_level,
+        format  = "%(levelname)-7s:%(asctime)s:%(funcName)s| %(message)s",
+        datefmt = "%y%m%d:%H.%M.%S")
+args.func(args)
