@@ -65,7 +65,7 @@ def binbam(bamfile, binsize, fragsize, chrominfo):
         else:
             n_unaln += 1
     # normalization factor
-    rpkm_factor = (1.0 / n_aln) * 1000000 / binsize * 1000
+    rpkm_factor = (1e6 / n_aln) * (1000.0 / binsize) 
     logging.info("Aligned reads:   %8d", n_aln)
     logging.info("Unaligned reads: %8d", n_unaln)
     logging.info("Ignored reads:   %8d", n_igno)
@@ -96,7 +96,7 @@ def process(args):
         logging.error("Could not extract length information for references from bam file")
         bamfile.close()
         sys.exit(1)
-    logging.info("Start first pass binning process")
+    logging.info("Start binning process")
     try:
         bins, norm_factor = binbam(bamfile, args.binsize, args.frag_size, chrominfo)
         logging.info("DONE")
