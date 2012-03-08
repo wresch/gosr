@@ -35,7 +35,7 @@ doc = string.Template(r"""
 \newcommand{\warn}{\large{\textbf{\textcolor{Orange}{WARN}}}}
 \newcommand{\fail}{\large{\textbf{\textcolor{Red}{FAIL}}}}
 
-\title{Run $runid}
+\title{Run $safe_runid}
 \author{gosr fastqc2pdf}
 
 \begin{document}
@@ -381,10 +381,11 @@ def fastqc2latex(args):
     """parses a fastqc data file into modules and yields
     each module as a (name, pass/fail, data) tuple"""
     # get a file handle to the data file insize the zip archive
-    runid    = args.out_prefix
-    tempdir  = tempfile.mkdtemp()
+    runid      = args.out_prefix
+    safe_runid = args.out_prefix.replace("_", r"\_")
+    tempdir    = tempfile.mkdtemp()
     sys.exitfunc = lambda: shutil.rmtree(tempdir)
-    datafile = "fastqc_data.txt"
+    datafile   = "fastqc_data.txt"
     
     zipf     = zipfile.ZipFile(args.fastqc, "r")
     datafile_zip_path = None
