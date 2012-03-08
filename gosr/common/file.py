@@ -24,7 +24,6 @@ class FileOrGzip(object):
         if self.filetype == "gzip":
             err = self.gz.stderr.read()
             self.fh.close()
-            logging.debug("waiting for gzip to exit")
             self.gz.wait()
             if self.gz.returncode != 0:
                 # ignore complaint about broken pipe from zcat
