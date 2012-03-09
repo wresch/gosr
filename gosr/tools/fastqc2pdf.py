@@ -9,6 +9,7 @@ Dependencies:
 """
 
 import sys
+import signal
 import os
 import re
 import string
@@ -18,7 +19,6 @@ import shutil
 import zipfile
 import subprocess
 import argparse
-import shlex
 from gosr.common import arghelpers
 
 #================================================================================
@@ -377,32 +377,38 @@ modules = {
     "Kmer Content": kmer_content
 }
 
-def fastqc2latex(args):
-    """parses a fastqc data file into modules and yields
-    each module as a (name, pass/fail, data) tuple"""
-    # get a file handle to the data file insize the zip archive
-    runid      = args.out_prefix
-    safe_runid = args.out_prefix.replace("_", r"\_")
+def prepare_tempdir(zipfilename, datafilename):
+    """set up the temp directory for processing data"""
     tempdir    = tempfile.mkdtemp()
     sys.exitfunc = lambda: shutil.rmtree(tempdir)
-    datafile   = "fastqc_data.txt"
     
-    zipf     = zipfile.ZipFile(args.fastqc, "r")
+    zipf     = zipfile.ZipFile(zipfilename, "r")
     datafile_zip_path = None
     for zipf_member in zipf.namelist():
-        if zipf_member.endswith(datafile):
+        if zipf_member.endswith(datafilename):
             datafile_zip_path = zipf_member
             break
     if datafile_zip_path is None:    
-        logging.error("zip file did not contain a 'fastqc_data.txt' file")
+        logging.error("zip file did not contain a '%s' file", datafilename)
         zipf.close()
         sys.exit(1)
-    with open(os.path.join(tempdir, datafile), "w") as out:
+    datafile_path = os.path.join(tempdir, datafilename)
+    with open(datafile_path, "w") as out:
         out.write(zipf.read(datafile_zip_path))
     zipf.close()
-    datafile_path = os.path.join(tempdir, datafile)
+
     data = open(datafile_path, "rU").read()
+    return tempdir, datafile_path, data
+
+def fastqc2latex(args):
+    """parses a fastqc data file into modules and yields
+    each module as a (name, pass/fail, data) tuple"""
+    runid      = args.out_prefix
+    safe_runid = args.out_prefix.replace("_", r"\_")
+    datafile   = "fastqc_data.txt"
+    tempdir, datafile_path, data = prepare_tempdir(args.fastqc, datafile)
     
+    # create .rnw file
     module = re.compile(r">>(.+?)\s+(pass|fail|warn)\n(.*?)>>END_MODULE", re.DOTALL)
     figures = []
     for module_name, status, data in module.findall(data):
@@ -417,15 +423,23 @@ def fastqc2latex(args):
     with open(rnw_file_path, "w") as out:
         out.write(doc.safe_substitute(locals()))
     
-    # create PDF file
-    sweave_cmd = "R CMD Sweave --pdf %s.rnw" % runid
-    logging.debug(sweave_cmd)
-    sweave = subprocess.Popen(shlex.split(sweave_cmd),
+    # create PDF file from .rnw
+    sweave_cmd = "env SWEAVE_STYLEPATH_DEFAULT=TRUE R CMD Sweave {0}.rnw " + \
+            "&& pdflatex {0}.tex && " + \
+            "pdflatex {0}.tex && pdflatex {0}.tex"
+    sweave = subprocess.Popen(sweave_cmd.format(runid), shell = True,
             close_fds = True, cwd = tempdir,
             stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    # trap SIGINT
+    def exit_nicely(signal, frame):
+        logging.warn("Received signal %d; terminating subprocess and exiting",
+                signal)
+        sweave.terminate()
+        sys.exit(1)
+    signal.signal(signal.SIGINT, exit_nicely)
     sweave_out, sweave_err = sweave.communicate()
     if sweave.returncode != 0:
-        logging.error("R CMD Sweave failed with exit code %s", sweave.returncode)
+        logging.error("External sweave/pdflatex failed with exit code %s", sweave.returncode)
         print >>sys.stderr, sweave_out
         print >>sys.stderr, sweave_err
         sys.exit(1)
