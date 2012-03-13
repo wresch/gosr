@@ -19,7 +19,7 @@ import numpy
 import HTSeq
 
 from gosr.common import arghelpers
-from gosr.common import signal
+from gosr.common import dsp
 
 def overlaps_any(garray, iv):
     steps = list(garray[iv].steps())
@@ -128,14 +128,14 @@ def output(density, up, down, extra, frag_size, n_tss, n_reads):
     n     = len(density["left"]) - 2 * extra - 1
     
     left = (density["left"].astype(float) / n_reads) * 1e9 / n_tss
-    left_smooth = signal.savitzky_golay_filter(left, smooth_filter_size,
+    left_smooth = dsp.savitzky_golay_filter(left, smooth_filter_size,
             order = 4)
     print "\n".join("{0}|{1}|{2}|left".format(a, b, c) for a, b, c in
             zip(pos[extra:(extra + n)], left[extra:(extra + n)], 
                 left_smooth[extra:(extra + n)]))
     
     right = (density["right"].astype(float) / n_reads) * 1e9 / n_tss
-    right_smooth = signal.savitzky_golay_filter(right, smooth_filter_size,
+    right_smooth = dsp.savitzky_golay_filter(right, smooth_filter_size,
             order = 4)
     print "\n".join("{0}|{1}|{2}|right".format(a, b, c) for a, b, c in
             zip(pos[extra:(extra + n)], right[extra:(extra + n)], 
@@ -147,7 +147,7 @@ def output(density, up, down, extra, frag_size, n_tss, n_reads):
     combined[cs:(cs + n)] += left[left_start:(left_start + n)]
     right_start = extra + frag_size // 2 + 1
     combined[cs:(cs + n)] += right[right_start:(right_start + n)]
-    combined_smooth = signal.savitzky_golay_filter(combined, smooth_filter_size,
+    combined_smooth = dsp.savitzky_golay_filter(combined, smooth_filter_size,
             order = 4)
     print "\n".join("{0}|{1}|{2}|combined".format(a, b, c) for a, b, c in
             zip(pos[extra:(extra + n)], combined[extra:(extra + n)], 
