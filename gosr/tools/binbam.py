@@ -11,7 +11,6 @@ Output format: Bedgraph
   aligned length is not the same as the read length).
 
 TODO: handle gapped/local alignments?
-TODO: wiggle format output
 TODO: variable size binning
 """
 
@@ -84,10 +83,9 @@ def binbam(bamfile, binsize, fragsize, chrominfo, n_redundancy, by_strand):
     logging.info("Ignored reads:                %8d", n_igno)
     return bins, rpkm_factor
 
-def output_bedgraph(bins, binsize, norm_factor, by_strand, name, extra_trackline = ""):
+def output_wiggle(bins, binsize, norm_factor, by_strand, name, extra_trackline = ""):
     """write all non-empty bins to bedgraph format strings; always includes
     minimal track line; Output is in 1-based wiggle format."""
-    bg = "{0}\t{1}\t{2}\t{3:.8f}"
     if not by_strand:
         print "track type=wiggle_0 alwaysZero=on visibility=full maxHeightPixels=100:80:50 " \
                 + ("name='%s'" % name) + extra_trackline
@@ -153,7 +151,7 @@ def process(args):
     logging.info("DONE")
     if args.sg > 0:
         smooth(bins, args.sg, args.by_strand)
-    output_bedgraph(bins, args.binsize, norm_factor, args.by_strand, args.name, args.track_line)
+    output_wiggle(bins, args.binsize, norm_factor, args.by_strand, args.name, args.track_line)
 
 def setup(commands):
     """set up command line parser"""
