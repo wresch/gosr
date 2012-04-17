@@ -45,6 +45,9 @@ doc = string.Template(r"""
 %% ===========================================================================================
 <<echo=F>>=
 library(ggplot2)
+library(plyr)
+library(reshape)
+
 theme.qc                  <- theme_bw(12)
 theme.qc$panel.border     <- theme_rect(fill = NA, size = 1, col = "black")
 theme.qc$panel.grid.minor <- theme_blank()

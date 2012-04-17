@@ -24,6 +24,7 @@ class Genome(object):
         self.__order     = dict(zip(chromosomes, range(len(chromosomes))))
         self.__offsets   = dict(zip(chromosomes, 
             [sum(sizeL[0:i]) for i in range(len(sizeL))]))
+        self.__offset_list = sorted(self.__offsets.items(), key = lambda x: x[1])
     
     def size(self, chrom):
         """size of chrom"""
@@ -43,6 +44,20 @@ class Genome(object):
         """Position of base pos (1-based) in chrom if chromosomes were
         concatenated in sort order; result is 0-based"""
         return self.__offsets[chrom] + pos - 1
+    def cpos2chrom(self, cpos0):
+        """Take a 0-based position in the concatenated genome and
+        return a chrom, pos tuple that maps the concatenated genome
+        position to a chromosome and a 0-based position"""
+        assert cpos0 >= 0
+        chrom  = None
+        offset = None
+        for c, o in self.__offset_list:
+            if cpos0 >= o:
+                chrom = c
+                offset = o
+            else:
+                break
+        return chrom, cpos0 - offset    
 
 #===============================================================================
 # Data
