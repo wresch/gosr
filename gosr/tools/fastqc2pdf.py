@@ -47,6 +47,7 @@ doc = string.Template(r"""
 library(ggplot2)
 library(plyr)
 library(reshape)
+library(scales)
 
 theme.qc                  <- theme_bw(12)
 theme.qc$panel.border     <- theme_rect(fill = NA, size = 1, col = "black")
@@ -161,7 +162,7 @@ df <- melt(df, id = "pos")
 p <- ggplot(df) +
     geom_line(aes(pos, value, col = variable), size = 1) +
     xlab("Position") +
-    scale_y_continuous("Fraction", formatter = "percent",
+    scale_y_continuous("Fraction", labels = percent,
         limits = c(0, 0.5)) +
     scale_color_manual("", values = c(T = "red", C = "blue", 
         A = "green", G = "black")) +
