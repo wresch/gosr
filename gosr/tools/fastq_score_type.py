@@ -27,8 +27,13 @@ def guess_score_type(letter_freq_dict):
     logging.info("Score range: %3d - %3d", minval, maxval)
     assert maxval <= 104
     if minval < 59:
-        assert maxval <= 73
-        logging.info("Score type: phred33")
+        if maxval <= 73:
+            logging.info("Score type: phred33")
+        elif maxval == 74:
+            logging.info("Score type: phred33 with Q up to 41 (illumina special)")
+        else:
+            logging.error("score minval < 59, but maxval > 74; score not determined")
+            sys.exit(1)
         return "phred33"
     else:
         if minval < 64:
