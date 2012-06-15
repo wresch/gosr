@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import sys
 
 class FileOrGzip(object):
     """Wrap regular file, gzipped file, or stdin in a context"""

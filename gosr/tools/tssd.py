@@ -116,7 +116,8 @@ def determine_frag_size(density, extra):
         peak_dist.append(dist(x[b1:(b1 + n)], y[b2:(b2 + n)]))
         shift.append(i)
     optimal_shift = [(s, d) for s, d in zip(shift, peak_dist) if d == min(peak_dist)]
-    assert(len(optimal_shift) == 1)
+    if len(optimal_shift) > 1:
+        logging.warn("more than one possible shift size: %s", optimal_shift)
     logging.info("Inferred fragment size estimate: %d", optimal_shift[0][0] * 2)
     return optimal_shift[0][0] * 2
 
@@ -172,7 +173,10 @@ def process(args):
 
     bamfile = HTSeq.BAM_Reader(args.bamfile)
     density, n_reads = make_density(tsspos, bamfile, up + extra, down + extra)
-    frag_size = determine_frag_size(density, extra)
+    if args.frag_size == -1:
+        frag_size = determine_frag_size(density, extra)
+    else:
+        frag_size = args.frag_size
     output(density, up + extra, down + extra, extra,
             frag_size, n_tss_used, n_reads)
 
@@ -190,4 +194,6 @@ def setup(commands):
             help = "nts upstream of TSS to include [%(default)s]")
     cmdline.add_argument("-d", "--downstream", type = int, default = 2000,
             help = "nts downstream of TSS to include [%(default)s]")
+    cmdline.add_argument("-s", "--frag-size", type = int, default = -1,
+            help = "pre determined fragment size; if default [%(default)s] determines size estimate from data")
     cmdline.set_defaults(func = process)

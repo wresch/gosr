@@ -5,7 +5,7 @@ Calculate density of reads in bins across the genome from bam file.
 Output units:  RPKM
 Output format: Bedgraph
 
-* Input sort order does not matter
+* Input sort order does matter
 * Output goes to stdout
 * Currently ignores chrM and gapped or local alignemts (where the
   aligned length is not the same as the read length).
